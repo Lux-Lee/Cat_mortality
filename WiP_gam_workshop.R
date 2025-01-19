@@ -6,7 +6,6 @@ library(tidyverse)
 library(mgcv) # for fitting gams and related functions
 library(gratia) # for better visualization of GAM results
 
-
 # Example from Pedersen et al. 2019
 
 # Using the built-in CO2 dataset in R, which gives uptake of CO2 in grasses under 
