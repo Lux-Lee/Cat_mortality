@@ -1,0 +1,28 @@
+##AADT
+Guelph_road <- read_excel("C:/Users/95joo/OneDrive/School-OD/IBIO4521.2/DATA/Guelph_road.xlsx")
+Kitchener_road <- read_excel("C:/Users/95joo/OneDrive/School-OD/IBIO4521.2/DATA/Kitchener_road.xlsx")
+Kitchener_road <-subset(Kitchener_road,SPEED<90)
+Guelph_road$OPSCLASS[Guelph_road$OPSCLASS==0] <-6
+Guelph_road <-subset(Guelph_road, OPSCLASS>1)
+Guelph_road$OPSCLASS<-as.factor(Guelph_road$OPSCLASS)
+Kitchener_road$OPSCLASS<-as.factor(Kitchener_road$OPSCLASS)
+Kitchener_road$LANES<-as.factor(Kitchener_road$LANES)
+Guelph_road$LANES<-as.factor(Guelph_road$LANES)
+Guelph_road$SPEED<-as.factor(Guelph_road$SPEED)
+Kitchener_road$SPEED<-as.factor(Kitchener_road$SPEED)
+
+Kit_AADT<- lm(log(Aadt)~log(ROADLENGTH)+OPSCLASS+SEQUENCE+DEAD_END+ROADCLASS+LANES+TRUCKROUTE+STREET_TYPE+FLOW_DIRECTION+SPEED, data=Kitchener_road)
+Kit_AADT_2<- lm(log(Aadt)~OPSCLASS+DEAD_END+ROADCLASS+LANES+TRUCKROUTE+STREET_TYPE+SPEED, data=Kitchener_road)
+Kit_AADT_3<- lm(log(Aadt)~log(ROADLENGTH)+OPSCLASS+SEQUENCE+DEAD_END+ROADCLASS+LANES+TRUCKROUTE+STREET_TYPE+SPEED, data=Kitchener_road)
+vif(Kit_AADT)
+vif(Kit_AADT_2)
+plot(Kit_AADT_2)
+summary(Kit_AADT)
+summary(Kit_AADT_2)
+summary(Kit_AADT_3)
+anova(Kit_AADT)
+anova(Kit_AADT_2)
+anova(Kit_AADT_3)
+Guelph_road$Aadt_2 <- exp(predict(Kit_AADT_2, newdata=Guelph_road))
+
+Catcam_data$AADT <- exp(predict(Kit_AADT_2, newdata=Catcam_data))
