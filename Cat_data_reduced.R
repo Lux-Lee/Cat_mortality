@@ -8,8 +8,8 @@ upper_bound <- Q3 + 1.5 * IQR
 Catcam_red <- subset(Catcam_filtered,time >= lower_bound & time <= upper_bound)
 
 ##Mortality per crossing
-Catcam_red$Success <- exp(-Catcam_red$traffic*Catcam_red$time)
-Catcam_red$mortality <- 1-Catcam_red$Success
+Catcam_red$success <- exp(-Catcam_red$traffic*Catcam_red$time)
+Catcam_red$mortality <- (1-Catcam_red$success)*0.7
 
 ##Frequency of duration
 freq_t_red <- Catcam_red %>%
@@ -35,11 +35,11 @@ summary(Catcam_red$traffic)
 
 summary(Catcam_red$mortality)
   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-  0.02334 0.08295 0.12258 0.13180 0.16832 0.45296  
+  0.01634 0.05806 0.08581 0.09226 0.11783 0.31707 
   sd(Catcam_red$mortality)
-  0.06813458
+  0.04769421
   se=sd(Catcam_red$mortality)/sqrt(314)
-  0.003845057
+  0.00269154
 
 ##Plot the duration distribution
 freq_red<-ggplot(data=freq_t_red, aes(x = time, y = frequency))+
@@ -68,26 +68,26 @@ stats_tf_red <- freq_t_red %>%
 ##Average mortality per subject
 Ave_red <- Catcam_red %>%
   group_by(cat_id) %>%
-  summarise(mortality=mean(mortality, na.rm=T)) 
-Ave_red$success <- 1-Ave_red$mortality
+  summarise(success=mean(success, na.rm=T)) 
+Ave_red$mortality <- (1-Ave_red$success)*0.7
 Ave_red$frequency <- freq_s$frequency
-Ave_red$mortality_period <- 1-((Ave_red$success)^(Ave_red$frequency))
+Ave_red$mortality_period <- (1-((Ave_red$success)^(Ave_red$frequency)))*0.7
 
 ##Average mortality using subject average
 mean(Ave_red$mortality)
-  0.1395805
+  0.09770635
 mean(Ave_red$frequency)
   12.53333
-1-(mean(Ave_red$success)^mean(Ave_red$frequency))
-  0.8480496
+(1-(mean(Ave_red$success)^mean(Ave_red$frequency)))*0.7
+  0.5936347
 
 ##Average mortality of data
 mean(freq_s$frequency)
   12.53333
 mean(Catcam_red$Success)
   0.8682042
-1-(mean(Catcam_red$Success)^mean(freq_s$frequency))
-  0.8298909
+(1-(mean(Catcam_red$Success)^mean(freq_s$frequency)))*0.7
+  0.5809236
 ##Average mortality
-1-(mean(Catcam_red$Success)^mean(freq_s$frequency))
-  0.8298909
+(1-(mean(Catcam_red$Success)^mean(freq_s$frequency)))*0.7
+  0.5809236

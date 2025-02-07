@@ -4,6 +4,7 @@ library(dplyr)
 library(ggplot2)
 library(tidyverse)
 library(car)
+
 Catcam_data <- read_excel("C:/Users/95joo/OneDrive/School-OD/IBIO4521.2/DATA/Catcam_data.xlsx")
 
 ##Removing "NA" data in duration and AADT
@@ -15,8 +16,8 @@ Catcam_filtered$AADT <- as.numeric(as.character(Catcam_filtered$AADT))
 Catcam_filtered$traffic <- Catcam_filtered$AADT/(24*60*60)
 
 ##Mortality per crossing
-Catcam_filtered$Success <- exp(-Catcam_filtered$traffic*Catcam_filtered$time)
-Catcam_filtered$mortality <- 1-Catcam_filtered$Success
+Catcam_filtered$success <- exp(-Catcam_filtered$traffic*Catcam_filtered$time)
+Catcam_filtered$mortality <- (1-Catcam_filtered$success)*0.7
 
 ##Frequency of crossing and duration
 freq_t <- Catcam_filtered %>%
@@ -54,11 +55,11 @@ summary(Catcam_filtered$traffic)
   
 summary(Catcam_filtered$mortality)
   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-  0.02334 0.08349 0.12845 0.14588 0.18170 0.64755 
+  0.01634 0.05844 0.08992 0.10211 0.12719 0.45329 
   sd(Catcam_filtered$mortality)
-  0.09000111
+  0.06300078
   se=sd(Catcam_filtered$mortality)/sqrt(337)
-  0.004902673
+  0.003431871
 
 ##Plot the duration distribution
 freq<-ggplot(data=freq_t, aes(x = time, y = frequency))+
@@ -87,23 +88,23 @@ stats_tf <- freq_t %>%
 ##Average mortality per subject
 Ave_filtered <- Catcam_filtered %>%
   group_by(cat_id) %>%
-  summarise(mortality=mean(mortality, na.rm=T)) 
-Ave_filtered$success <- 1-Ave_filtered$mortality
+  summarise(success=mean(success, na.rm=T)) 
+Ave_filtered$mortality <- (1-Ave_filtered$success)*0.7
 Ave_filtered$frequency <- freq_s$frequency
 Ave_filtered$mortality_period <- 1-((Ave_filtered$success)^(Ave_filtered$frequency))
 
 ##Average mortality using subject average
 mean(Ave_filtered$mortality)
-  0.1692337
+  0.1184636
 mean(Ave_filtered$frequency)
   12.53333
-1-(mean(Ave_filtered$success)^mean(Ave_filtered$frequency))
-  0.9020956
+(1-(mean(Ave_filtered$success)^mean(Ave_filtered$frequency)))*0.7
+  0.6314669
   
 ##Average mortality of data
 mean(freq_s$frequency)
   12.53333
 mean(Catcam_filtered$Success)
   0.8541241
-1-(mean(Catcam_filtered$Success)^mean(freq_s$frequency))
-  0.8614107
+(1-(mean(Catcam_filtered$Success)^mean(freq_s$frequency)))*0.7
+  0.6029875
