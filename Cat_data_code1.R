@@ -1,12 +1,18 @@
 library(readxl)
-library(xlsx)
-library(dplyr)                          
+library(dplyr)
 library(ggplot2)
 library(tidyverse)
+library(MASS)
 library(car)
+library(fitdistrplus)
+library(goftest)
+library(actuar)
+library(flexsurv) 
+library(truncnorm)
+library(pscl)
 
 Catcam_data <- read_excel("C:/Users/95joo/OneDrive/School-OD/IBIO4521.2/DATA/Catcam_data.xlsx")
-
+Catcam_data <- Catcam_data %>% select(1,5,6,9,10)
 ##Removing "NA" data in duration and AADT
 Catcam_filtered <- subset(Catcam_data, Duration !="NA")
 Catcam_filtered$Duration <- as.numeric(as.character(Catcam_filtered$Duration))
@@ -42,7 +48,7 @@ summary(Catcam_filtered$time)
   3.00   11.00   15.00   16.93   20.00   97.00 
   sd(Catcam_filtered$time)
   11.09303
-  se=sd(Catcam_filtered$time)/sqrt(337)
+  sd(Catcam_filtered$time)/sqrt(337)
   0.6042757
 
 summary(Catcam_filtered$traffic)
@@ -68,6 +74,16 @@ freq<-ggplot(data=freq_t, aes(x = time, y = frequency))+
 freq +geom_point(data=freq_t, aes(x = time, y = frequency), color="black") 
 freq+ geom_area(color = "black", fill = "#00AFBB") +
   geom_vline(aes(xintercept= mean(Catcam_filtered$time)), col="blue") 
+
+simul_lognorm_duration <- rlnorm(1000, 
+                        meanlog = fit_lognorm$estimate["meanlog"], 
+                        sdlog = fit_lognorm$estimate["sdlog"])
+ggplot() +
+  geom_density(data = data.frame(Value = Catcam_filtered$time), aes(x = Value), fill = "blue", alpha = 0.5) +
+  geom_density(data = data.frame(Value = simul_lognorm_duration), aes(x = Value), fill = "red", alpha = 0.5) +
+  labs(title = "Fitted Normal Distribution vs. Sample", x = "Time", y = "Density") +
+  scale_fill_manual(values = c("blue", "red"))+
+  geom_vline(aes(xintercept= mean(Catcam_red$time)), col="black") 
 
 ggplot(freq_t, aes(x=frequency, y=time)) +
   geom_boxplot()

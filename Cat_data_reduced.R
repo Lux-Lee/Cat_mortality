@@ -4,7 +4,6 @@ Q3 <- 20
 IQR <- Q3 - Q1
 lower_bound <- max(0, Q1 - 1.5 * IQR)
 upper_bound <- Q3 + 1.5 * IQR
-
 Catcam_red <- subset(Catcam_filtered,time >= lower_bound & time <= upper_bound)
 
 ##Mortality per crossing
@@ -48,6 +47,7 @@ freq_red<-ggplot(data=freq_t_red, aes(x = time, y = frequency))+
 freq_red +geom_point(data=freq_t_red, aes(x = time, y = frequency), color="black") 
 freq_red+ geom_area(color = "black", fill = "#00AFBB") +
   geom_vline(aes(xintercept= mean(Catcam_red$time)), col="blue") 
+
 
 ggplot(freq_t_red, aes(x=frequency, y=time)) +
   geom_boxplot()

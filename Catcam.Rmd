@@ -1,0 +1,203 @@
+---
+title: "Catcam"
+author: "Lusia"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document: 
+    extra_dependencies: ["setspace"]
+header-includes: 
+  - \usepackage{setspace} 
+  - \linespread{2.0}
+  - \usepackage{mdframed}
+  - \usepackage{hyperref}
+  - \hypersetup{colorlinks=true, urlcolor=blue}
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(MASS)
+library(car)
+library(fitdistrplus)
+library(goftest)
+library(actuar)
+library(flexsurv) 
+library(truncnorm)
+library(pscl)
+library(pracma)
+knitr::opts_chunk$set(echo = FALSE, tidy = TRUE, width.cutoff = 60)
+```
+
+# AADT Modeling
+The data is obtained from each city (open data, you can click to access the data):
+
+- [Guelph Road](https://explore.guelph.ca/datasets/13eb15489455495b89f65437b05d4f50_1/explore?location=43.452714%2C-80.474796%2C17.70)
+- [Kitchener Road](https://open-kitchenergis.opendata.arcgis.com/datasets/c2a28a64955943ffad68e7ce099c5556_0/explore?location=43.458502%2C-80.559454%2C18.70)
+- [Bruce County](https://maps.brucecounty.on.ca/arcgisportal/apps/mapviewer/index.html?layers=c9d9b6c118194fff990e749ef0f666da)
+- [Ontario](https://www.arcgis.com/apps/mapviewer/index.html?webmap=3402c1b3bcfe485b95f0dec23a1492a2)
+- [Waterloo Road](https://data.waterloo.ca/datasets/RMW::-roads/explore?location=43.457658%2C-80.559946%2C18.70)
+- [Cambridge Road](https://geohub.cambridge.ca/datasets/21d5954af80e4fa4b45f53ecf201efc3_14/explore?location=43.402358%2C-80.329650%2C12.29)
+
+```{r aadt}
+##Name of column and data were modified to ensure consistent formatting (ST=Street)
+Kitchener_road <- read_excel("C:/Users/95joo/OneDrive/School-OD/IBIO4521.2/DATA/Kitchener_road.xlsx")
+##Removing data causing linearity issue which is also unrelated to our study
+Kitchener_road <-subset(Kitchener_road,SPEED<90)
+Kitchener_road$OPSCLASS<-as.factor(Kitchener_road$OPSCLASS)
+Kitchener_road$LANES<-as.factor(Kitchener_road$LANES)
+Kitchener_road$SPEED<-as.factor(Kitchener_road$SPEED)
+```
+Polynomial model is created using the common parameters found in datasets.
+
+```{r model, echo=TRUE}
+Kit_AADT_2<- lm(log(Aadt)~OPSCLASS+DEAD_END+ROADCLASS+LANES+TRUCKROUTE+STREET_TYPE+SPEED, data=Kitchener_road)
+vif(Kit_AADT_2)
+anova(Kit_AADT_2)
+```
+Summary of the model:
+\begin{verbatim}
+Residual standard error: 0.4482 on 5639 degrees of freedom
+  (168 observations deleted due to missingness)
+Multiple R-squared:  0.9176,	Adjusted R-squared:  0.917 
+F-statistic:  1427 on 44 and 5639 DF,  p-value: < 2.2e-16
+\end{verbatim}
+```{r apply}
+Catcam_data <- read_excel("C:/Users/95joo/OneDrive/School-OD/IBIO4521.2/DATA/Catcam_data.xlsx")
+Catcam_data <- Catcam_data %>% select_at(vars(1,5,6,9,10))
+##Removing "NA" data in duration and AADT
+Catcam_filtered <- subset(Catcam_data, Duration !="NA")
+Catcam_filtered <- subset(Catcam_filtered, AADT !="NA")
+##Changing data format (rounding duration in s, traffic in s)
+Catcam_filtered$Duration <- as.numeric(as.character(Catcam_filtered$Duration))
+Catcam_filtered$AADT <- as.numeric(as.character(Catcam_filtered$AADT))
+Catcam_filtered$time <-round(Catcam_filtered$Duration,digits=0)
+Catcam_filtered$traffic <- Catcam_filtered$AADT/(24*60*60)
+```
+
+# Variable estimators
+A positive integral value dataset, such as frequency and duration, is assumed to follow gamma distribution. Each variables are tested for different distributions, such as log-normal, zero-inflated, and negative binomial. To increase quality of the estimator, multiple distributions of parameters were tested and all data was used instead of cutting out the data. Gamma distribution is estimated using the sample data and it is shown red. Blue graph is sample data distribution. Blue vertical line indicates sample mean and red indicates the expected value.\
+
+## Traffic volume
+\begin{verbatim}
+  estimate Std. Error
+  shape 5.094035 0.3802488
+  rate 490.092739 38.4476214
+  Loglikelihood: 1358.259 AIC: -2712.518 BIC: -2704.877
+  Correlation matrix:
+shape rate
+shape 1.000000 0.951499
+rate 0.951499 1.000000
+\end{verbatim}
+
+```{r t_plot, fig.width=4.9, fig.height=3.5}
+fit_gamma_t <- fitdist(Catcam_filtered$traffic, "gamma")
+simul_gamma_t <- rgamma(10000, shape = fit_gamma_t$estimate["shape"], 
+                   rate = fit_gamma_t$estimate["rate"])
+ggplot() +
+  geom_density(data = data.frame(Value = Catcam_filtered$traffic), aes(x = Value), fill = "blue", alpha = 0.5) +
+  geom_density(data = data.frame(Value = simul_gamma_t), aes(x = Value), fill = "red", alpha = 0.5) +
+  labs(title = "Gamma Fit vs. Sample data", x = "Traffic (vehicle/s)", y = "Density") +
+  geom_vline(aes(xintercept = mean(Catcam_filtered$traffic)), col = "blue")+
+  geom_vline(aes(xintercept = mean(simul_gamma_t)), col = "red")
+```
+
+## Frequency of crossing
+```{r}
+Subject <- read_excel("C:/Users/95joo/OneDrive/School-OD/IBIO4521.2/DATA/Catcam_data.xlsx", sheet="Subject")
+Subject <- Subject %>% select_at(vars(1:4))
+Subject$fre_day<- Subject$frequency/Subject$calendar_day
+Subject$fre_week <-Subject$fre_day *7
+fit_gamma_f <- fitdist(Subject$fre_week, "gamma")
+simul_gamma_f <- rgamma(10000, 
+                         shape = fit_gamma_f$estimate["shape"], 
+                         rate = fit_gamma_f$estimate["rate"])
+```
+\begin{verbatim}
+  estimate Std. Error
+  shape 0.8860221 0.19923256
+  rate 0.1048266 0.03112522
+  Loglikelihood: -93.88528 AIC: 191.7706 BIC: 195.513
+  Correlation matrix:
+  shape rate
+  shape 1.0000000 0.7571975
+  rate 0.7571975 1.0000000
+  Min. 1st Qu. Median Mean 3rd Qu. Max.
+  0.00004 2.19988 5.68819 8.54521 11.71171 115.11790
+\end{verbatim}
+```{r f_plot, fig.width=4.9, fig.height=3.5}
+ggplot() +
+  geom_density(data = data.frame(Value = Subject$fre_week), aes(x = Value), fill = "blue", alpha = 0.5) +
+  geom_density(data = data.frame(Value = simul_gamma_f), aes(x = Value), fill = "red", alpha = 0.5) +
+  labs(title = "Gamma Fit vs. Sample Data", x = "Frequency of crossing/week", y = "Density") +
+  geom_vline(aes(xintercept = mean(Subject$fre_week)), col = "blue")+
+  geom_vline(aes(xintercept = mean(simul_gamma_f)), col = "red")
+```
+
+# Mortality calculation
+Probability of getting hit by a car is multiplied by 0.7, which is the mortality per accident found in epidemiology study and survey. Expected values of each parameter distribution were used to calculate the expected mortality.
+
+## Mortality using v=2m/s, road width=10m
+```{r, include=FALSE}
+gamma_f<- function(x) {exp(-x)*dgamma(x, shape = fit_gamma_f$estimate["shape"], 
+         rate = fit_gamma_f$estimate["rate"])*x}
+expected_f <- integral(gamma_f, 0, Inf)
+gamma_t<- function(x) {exp(-x)*dgamma(x, shape = fit_gamma_t$estimate["shape"], 
+                                      rate = fit_gamma_t$estimate["rate"])*x}
+expected_t <- integral(gamma_t, 0, Inf)
+# Generate random values from Gamma distributions
+F_samples <- rgamma(10000, shape = fit_gamma_f$estimate["shape"], rate = fit_gamma_f$estimate["rate"])
+T_samples <- rgamma(10000, shape = fit_gamma_t$estimate["shape"], rate = fit_gamma_t$estimate["rate"])
+
+Mortality <- (1 - exp(-(T_samples) * 0.769)) * 0.7
+Mortality_w <-(1 - exp(-(T_samples) * 0.769))^(F_samples) * 0.7
+fit_gamma_m <- fitdist(Mortality, "gamma")
+simul_gamma_m <- rgamma(1000, 
+                        shape = fit_gamma_m$estimate["shape"], 
+                        rate = fit_gamma_m$estimate["rate"])
+```
+The expected value of crossing frequency per week and traffic volume per second were used to calculate the weekly mortality of crossing.\
+```{r, echo=TRUE}
+Success_p<-exp(-expected_t*5)
+print(Success_p)
+#Per crossing
+(1-Success_p)*0.7
+#Per week
+(1-((Success_p*0.7)^expected_f))
+```
+## Mortality using v=13m/s, road width=10m
+```{r, echo=TRUE}
+Success_p2<-exp(-expected_t*0.769)
+Mortality_p2 <-1-Success_p2*0.7
+print(Success_p2)
+print(Mortality_p2)
+#Per crossing
+(1-Success_p2)*0.7
+#Per week
+(1-((Success_p2*0.7)^expected_f))
+```
+## Mortality simulation
+Distribution of the mortality per crossing, which follows gamma distribution. The blue vertical line indicates the mean mortality value. \
+```{r mortality, fig.width=4.9, fig.height=3.5}
+ggplot() +
+  geom_density(data = data.frame(Value = simul_gamma_m), aes(x = Value), fill = "blue", alpha = 0.5) +
+  labs(title = "Gamma Fit of Mortality per Crossing", x = "Mortality per crossing", y = "Density") +
+  geom_vline(aes(xintercept = mean(simul_gamma_m)), col = "blue")+
+  geom_vline(xintercept = 0.0085, col = "red", show.legend=FALSE)
+```
+\
+Annual mortality was calculated, frequency/year, under assumption of consistent frequency/week throughout the year. 
+```{r, echo=TRUE}
+##Mortality per crossing summary
+summary(Mortality)
+##Annual mortality using v=2m/s, road width=10m
+(1-((Success_p*0.7)^(expected_f*52)))
+##Annual mortality using v=13m/s, road width=10m
+(1-((Success_p2*0.7)^(expected_f*52)))
+```
+
+
