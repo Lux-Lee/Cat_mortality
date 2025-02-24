@@ -13,14 +13,10 @@ summary(fit_lognorm_t)
 fit_exp_t <- fitdist(Catcam_filtered$traffic, "exp")
 summary(fit_exp_t)
 
-plot.legend2 <- c("Weibull", "Gamma", "Log-Normal", "Exponential","Normal", "Logistic", "Generalized Gamma")
-denscomp(list(fit_weibull_t, fit_gamma_t, fit_lognorm_t, fit_exp_t, 
-              fit_normal_t, fit_logistic_t, fit_gen_gamma_t), legendtext = plot.legend2)
-qqcomp(list(fit_weibull_t, fit_gamma_t, fit_lognorm_t, fit_exp_t, 
-            fit_normal_t, fit_logistic_t, fit_gen_gamma_t), legendtext = plot.legend2)
-cdfcomp(list(fit_weibull_t, fit_gamma_t, fit_lognorm_t, fit_exp_t, 
-             fit_normal_t, fit_logistic_t, fit_gen_gamma_t), legendtext = plot.legend2)
-
+plot.legend2 <- c("Weibull", "Gamma", "Log-Normal", "Exponential")
+denscomp(list(fit_weibull_t, fit_gamma_t, fit_lognorm_t, fit_exp_t), fitlwd = 2, legendtext = plot.legend2, xlegend = "topright")
+qqcomp(list(fit_weibull_t, fit_gamma_t, fit_lognorm_t, fit_exp_t), fitpch=19, legendtext = plot.legend2, xlegend = "bottomright")
+cdfcomp(list(fit_weibull_t, fit_gamma_t, fit_lognorm_t, fit_exp_t), fitlwd = 2, legendtext = plot.legend2, xlegend = "bottomright")
 
 # Anderson-Darling Test for Weibull
 ad.test(Catcam_filtered$traffic, pweibull, 
@@ -28,8 +24,8 @@ ad.test(Catcam_filtered$traffic, pweibull,
         scale = fit_weibull_t$estimate["scale"])
 # Anderson-Darling Test for Gamma
 ad.test(Catcam_filtered$traffic, pgamma, 
-        shape = fit_gamma$estimate["shape"], 
-        rate = fit_gamma$estimate["rate"])
+        shape = fit_gamma_t$estimate["shape"], 
+        rate = fit_gamma_t$estimate["rate"])
 # Anderson-Darling Test for Log-Normal
 ad.test(Catcam_filtered$traffic, plnorm, 
         meanlog = fit_lognorm_t$estimate["meanlog"], 
@@ -126,11 +122,13 @@ names(bic_values_t2) <- c("Normal", "Logistic", "Generalized Gamma")
 print(aic_values_t2)
 print(bic_values_t2)
 
-###Gamma
-simul_gamma_t <- rgamma(1000, shape = fit_gamma_t$estimate["shape"], 
-                   rate = fit_gamma_t$estimate["rate"])
+###lognorm
+simul_lognorm_t <- rlnorm(1000, meanlog = fit_lognorm_t$estimate["meanlog"], 
+                          sdlog = fit_lognorm_t$estimate["sdlog"])
 ggplot() +
   geom_density(data = data.frame(Value = Catcam_filtered$traffic), aes(x = Value), fill = "blue", alpha = 0.5) +
-  geom_density(data = data.frame(Value = simul_gamma_t), aes(x = Value), fill = "red", alpha = 0.3) +
-  labs(title = "Gamma Fit vs. Empirical Data", x = "traffic", y = "Density") +
-  geom_vline(aes(xintercept = mean(Catcam_red_rtraffic$traffic)), col = "black")
+  geom_density(data = data.frame(Value = simul_lognorm_t), aes(x = Value), fill = "red", alpha = 0.3) +
+  labs(title = " ", x = "Vehicle per second", y = "Density") +
+  geom_vline(aes(xintercept = mean(Catcam_filtered$traffic)), col = "blue") +
+  geom_vline(aes(xintercept = mean(simul_lognorm_t)), col = "red") +
+  theme_bw()

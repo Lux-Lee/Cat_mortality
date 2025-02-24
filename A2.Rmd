@@ -1,0 +1,222 @@
+---
+title: "STAT3110 Assignment 2"
+author: "Lusia"
+date: "February 9, 2025"
+output: 
+  pdf_document: 
+    extra_dependencies: ["setspace"]
+header-includes: 
+  - \usepackage{setspace} 
+  - \usepackage{amsmath}
+  - \linespread{2.0}
+  - \usepackage{mdframed}
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1.  If X has an exponential($\theta$) distribution with probability density function $f_X(x) =\frac{1}{\theta}e^{-\frac{x}{\theta}}, \; \theta > 0 \; \text{ for } \; x \geq 0$. Use the distribution function technique to find the probability density function of the random variable $Y = ln X$.
+$$
+    \begin{array}{c}
+    F_Y(y) = P(Y \leq y) = P(lnX \leq y )=P(X \leq e^y) \\  \quad \quad \text{for } \; 0\leq x, \quad -\infty \leq y \leq \infty \\
+    F_Y(y)=\int^{e^y}_0f_X(x)\ dx\ = \int^{e^y}_0\frac{1}{\theta}e^{-\frac{x}{\theta}}\ dx\ = [-e^{-\frac{x}{\theta}}]_0^{e^y}=1-e^{-\frac{e^y}{\theta}}
+    \\
+    f_Y(y)  = \frac{\partial F_Y(y)}{\partial y}= \frac{d (1-e^{-\frac{e^y}{\theta}})}{dy} = \frac{e^y}{\theta} \cdot e^{-\frac{e^y}{\theta}}, \quad y \in \mathbb{R}
+    \end{array}
+$$
+
+2.  Leah is planning to do the road test in order to get her driver license. The fee for a road test is \$50. Suppose the probability of passing the road test, $P(pass) = p$. If pass, Leah is required to pay \$30 administration fee to get her driver license. If she fails, she has to do the road test again until she passes.  Find the probability distribution function of the total cost (in the unit of \$10) that Leah will pay to get the drive license.
+
+$$
+\begin{array}{c}
+\text{The number of tests, X, follows Geometric distribution with p} \\ 
+X \thicksim Geometric (p), \quad \text{Cost in \$10} \\ 
+c=5x+3, \; x=1,2,3 \cdots \\
+x=\frac{c-3}{5}, \; c=8, 13, 18 \cdots\\
+P(X=x)= p(1-p)^{x-1} \\
+P(X=\frac{c-3}{5})=p(1-p)^{\frac{c-3}{5}-1}=p(1-p)^{\frac{c-8}{5}}
+\end{array}
+$$
+
+3.  Consider $X_1, ..., X_n \thicksim iid \; Uniform(\theta - \frac{1}{2} , \; \theta + \frac{1}{2})$. 
+$$
+    \begin{array}{c}
+    f_{X_i}(x)=\frac{1}{(\theta + \frac{1}{2})-(\theta - \frac{1}{2})}=1, \text{ for } \; \theta - \frac{1}{2} \leq x \leq \theta + \frac{1}{2} \\
+    F_{X_i}(x)= 
+    \begin{cases} 
+    \quad 0 \; \quad \; \quad ,\; \; \quad x < \theta - \frac{1}{2}\\
+    x-\theta + \frac{1}{2}, \; \quad \theta - \frac{1}{2}\leq x \leq\theta + \frac{1}{2} \\
+    \quad 1 \quad \; \quad \; , \; \quad \theta + \frac{1}{2} < x 
+    \end{cases}
+    \\
+    (\; F_{X_i}(x)=\int^{x}_{\theta - \frac{1}{2}} 1 \ dx\ =x|^{x}_{\theta - \frac{1}{2}}=x-\theta +\frac{1}{2}\; )
+    \end{array}
+$$
+
+
+(a) Show that the sample mean $\bar{X}$ is unbiased for $\theta$ .
+$$
+    \begin{array}{c}
+    E(\bar{X})=E(\frac{1}{n}\sum^n_{i=1} X_i)=\frac{1}{n} \sum^n_{i=1} E(X_i)= \frac{\theta + \frac{1}{2}+\theta - \frac{1}{2}}{2}= \theta \\
+    \end{array}
+$$
+
+(b) Suppose $\theta =1$, use R to generate random samples of size $n = 10, 100, 1000,\; and \; 10000$ random samples from $Uniform(\frac{1}{2}, \; 1\frac{1}{2})$. Compare the sample means for different sample sizes. (hint: in R, use function “runif(n,a,b)” to generate a random sample of size n from a $Uniform(a,b)$ distribution.)
+```{r, 3b}
+size_n<- c(10, 100, 1000, 10000)
+for (n in size_n) {
+  samples <- runif(n, 0.5, 1.5)
+  print(mean(samples))
+}
+```
+\  
+\begin{mdframed}
+As n increases, the sample mean gets closer to expected sample mean. In other word, the magnitude of difference between the sample mean and the expected sample mean decreases.
+\end{mdframed}
+$$
+\bar{X_n}= \frac{1}{n}\sum^n_{i=1} X_i\;.  \quad \text{As } \; n \rightarrow \infty \; , \quad 
+\bar{X_n} \rightarrow E(X)
+$$
+
+(c) Suppose now we have $n = 3$, show that the sample median (here it is $X_{(2)}$) is unbiased for $\theta$.
+
+$$
+\begin{aligned}
+f_{X_2}(x)&=\frac{3!}{1!\; 1!\; 1!}F_{X_i}(x)^1 \cdot f_{X_i}(x) \cdot (1-F_{X_i}(x))^1 \\
+&=6 \cdot (\frac{1}{2}+(x-\theta))(\frac{1}{2}-(x-\theta))=6 \cdot (\frac{1}{4}-(x-\theta)^2) \\
+& \quad \text{for } \quad \theta -  \frac{1}{2}  \leq x \leq \theta + \frac{1}{2}\\
+E(X_2)&=\int^{\theta + \frac{1}{2}}_{\theta -  \frac{1}{2}} 6 \cdot x \cdot (\frac{1}{4}-(x-\theta)^2) \ dx \ = 6 \int^{\theta + \frac{1}{2}}_{\theta -  \frac{1}{2}} \frac{x}{4}-x^3+2\theta x^2-\theta^2x \ dx \\
+&= 6[\frac{x^2}{8}-\frac{x^4}{4}+\frac{2}{3}\theta x^3-\theta ^2x]^{\theta + \frac{1}{2}}_{\theta -  \frac{1}{2}} =\theta \\
+& \quad \therefore \; E(X_2) \text{ is an unbiased estimator of }\theta
+\end{aligned}
+$$
+
+(d) Again, suppose $\theta =1$. Now use R to generate 100 random samples from $Uniform(\frac{1}{2}, \; 1 \frac{1}{2} )$ and each has sample size $n = 3$. Compare the mean of the sample medians with the result from (c). (hint: Use the R function “median(x)” for the median of a vector x.)
+```{r, median}
+set.seed(123) 
+random_samples<- replicate(100, median(runif(3, 0.5, 1.5)))
+print(random_samples)
+mean(random_samples)
+
+```
+  
+\  
+\begin{mdframed}
+We expect the mean of the sample medians to be approximately 1 and the result is very close to 1.
+\end{mdframed}
+
+(e) Repeat (d) but setting the sample size $n = 10$. Compare your result to (d) and draw you conclusion
+
+```{r, median2}
+set.seed(123) 
+random_samples2<- replicate(100, median(runif(10, 0.5, 1.5)))
+print(random_samples2)
+mean(random_samples2)
+```
+\  
+\begin{mdframed}
+As n increases, the mean of sample median is closer to 1. Comparing with part (d), the sample median mean is closer to 1, as variance decreases.
+\end{mdframed}
+
+4.  Suppose $X_1, \cdots , X_n$ is a random sample from $Uniform(0, \theta)$. Consider two estimators: $\hat{\theta_1} =X_{n}$ and $\hat{\theta_2} = 2\bar{X}$ where $\bar{X}$ is the sample mean. 
+$$
+    \begin{array}{c}
+    f_{X_i}(x)=\frac{1}{\theta-0}=\frac{1}{\theta}, \text{ for } \; 0 \leq x \leq \theta \\
+    F_{X_i}(x)= 
+    \begin{cases} 
+    \quad 0 \; \quad ,\; \; \quad x < 0\\
+    \quad \frac{x}{\theta} \quad , \; \quad 0\leq x \leq\theta  \\
+    \quad 1 \quad \;, \; \quad \theta  < x 
+    \end{cases}
+    \\
+    E(X_i)=\frac{\theta}{2}, \quad Var(X_i)=\frac{\theta^2}{12} \\
+    f_{X_{(n)}}(x)=n \cdot [F_X(x)]^{n-1}f_X(x)=n \cdot \frac{x}{\theta}^{n-1}\frac{1}{\theta}=\frac{n \cdot x^{n-1}}{\theta ^n} \\
+    \end{array}
+$$
+
+(a) Are these two estimators unbiased for $\theta$ ?
+
+$$
+\begin{aligned}
+E(\hat{\theta_1}) = E(X_{(n)})&= \int ^{\theta}_0 x \cdot \frac{n \cdot x^{n-1}}{\theta ^n} \ dx\ =\frac{n}{\theta^n} \int ^{\theta}_0x^n \ dx\ \\
+&=\frac{n}{(n+1) \theta^n }x^{n+1}|^{\theta} _0 = \frac{n \; \theta}{n+1}
+\\
+\lim_{n \to \infty} E(\hat{\theta_1}) &= \lim_{n \to \infty} \frac{n \; \theta}{n+1}= \theta
+\\
+E(\hat{\theta_2})&=E(2\bar{X})= 2 \cdot \frac{\theta}{2}= \theta \\
+\end{aligned}
+$$ 
+$$
+\therefore \hat{\theta_1}  \text{ is an asymptotically unbiased estimator}  \\
+\hat{\theta_2} \text{ is an unbiased estimator}
+$$
+
+(b) Compare their mean square errors (MSE’s).
+$$
+\begin{array}{c}
+MSE(\hat{\theta})=Var(\hat{\theta})+[E(\hat{\theta})-\theta]^2 \\
+E(\hat{\theta_1}^2)=\int ^{\theta}_0 x^2 \cdot \frac{n \cdot x^{n-1}}{\theta ^n} \ dx\ = 
+\frac{n}{\theta^n} \int ^{\theta}_0x^{n+1} \ dx\ = \frac{n}{(n+2) \theta^n }x^{n+2}|^{\theta} _0 =\frac{n \; \theta^2}{n+2}\\
+Var(\hat{\theta_1}) =\frac{n \; \theta^2}{n+2} - (\frac{n \; \theta}{n+1})^2= \frac{n \theta ^2}{(n+2)(n+1)^2} \\
+MSE(\hat{\theta_1})=\frac{n \theta ^2}{(n+2)(n+1)^2}+[\frac{n \; \theta}{n+1}-\theta ]^2=
+\frac{n \theta ^2}{(n+2)(n+1)^2}+\frac{\theta ^2}{(n+1)^2}=\frac{2\theta ^2}{(n+1)(n+2)} \\
+MSE(\hat{\theta_2})=Var(2\bar{X})=\frac{2^2}{n} \cdot Var(X_i)=\frac{\theta^2}{3n}
+\end{array}
+$$
+\  
+\begin{mdframed}
+Both mean square errors approach to 0 as n increases, but \( MSE(\hat{\theta_1}) \) decreases at a faster rate than \( MSE(\hat{\theta_2}) \) as n increases. Therefore, \( \hat{\theta_1} \) is preferred with large n and \( \hat{\theta_2} \) is preferred with smaller n.
+\end{mdframed}
+
+(c) Show by definition that $X_{(n)}$ is a consistent estimator for $\theta$.
+$$
+\begin{array}{c}
+\lim_{n \to \infty} E(\hat{\theta_1})=\lim_{n \to \infty}\frac{n \; \theta}{n+1}=\theta \\
+\lim_{n \to \infty} Var(\hat{\theta_1}) = \lim_{n \to \infty}\frac{n \theta ^2}{(n+2)(n+1)^2}=0\\
+\therefore X_{(n)} \text{ is asymptotically unbiased and consistent estimator for } \theta
+\end{array}
+$$
+
+(d) Suppose $\theta =1$, use R to generate random samples of size $n = 10, \; 100, \; 1000$ and $10,000$. Obtain the maximum statistics, $X_{(n)}$, for each sample. Compare you result to (c). (hint: in R, use function “max(x)” for the maximum value of a vector x.)
+```{r, max}
+set.seed(123) 
+for (n in size_n) {
+  max_samples <- max(runif(n, 0, 1))
+  print( max_samples)
+}
+```
+
+\  
+\begin{mdframed}
+The simulation confirms that larger samples produce better estimates, as n increases the observed \(X_{(n)}\) approach 1. So, based on the R results and the theoretical proof from (c), the maximum statistic \(X_{(n_)}\) is a consistent estimator of \(\theta\).
+\end{mdframed}
+
+5. Suppose that $X_1, \cdots , X_n$ is a random sample from a population with probability
+density function 
+$$f(x;\theta)=\frac{1}{\theta +1}e^{-\frac{x}{\theta +1}}, \quad x>0, \; \theta > -1$$
+(a) Find an unbiased estimator for $\theta$.
+$$
+\begin{aligned}
+E(X) &= \int_0^\infty x f(x;\theta) \ dx \ = \int_0^\infty x \cdot \frac{1}{\theta +1} e^{- \frac{x}{\theta +1}} \ dx\ \\
+&=-\frac{x}{\theta +1}\cdot \frac{\theta +1}{1} \cdot e^{- \frac{x}{\theta +1}}-\frac{1}{\theta +1}\frac{(\theta +1)^2}{1} e^{- \frac{x}{\theta +1}}|_0^\infty= \theta +1 \\
+E(X^2)&= \int_0^\infty x^2f(x;\theta) \ dx \ =\int_0^\infty x^2 \cdot \frac{1}{\theta +1} e^{- \frac{x}{\theta +1}} \ dx\ = 2(\theta +1)^2\\
+Var(X) &= 2(\theta+1)^2-(\theta+1)^2= (\theta+1)^2\\
+\hat{\theta} &= \bar{X}-1, \; E(\hat{\theta})=\theta, \; Var(\hat{\theta})=\frac{(\theta+1)^2}{n}
+\end{aligned}
+$$
+
+(b) Find the Cramer-Rao’s lower bound (CRLB) of the unbiased estimates of $\theta$. 
+$$
+\begin{array}{c}
+ln \; f(x;\theta) = ln (\frac{1}{\theta +1} e^{- \frac{x}{\theta +1}})=-ln(\theta+1)-\frac{x}{\theta +1} \\
+\frac{\partial (-ln(\theta+1)-\frac{x}{\theta +1})}{\partial \; \theta}=\frac{-1}{\theta +1}+\frac{x}{(\theta +1)^2}= \frac{x-(\theta+1)}{(\theta+1)^2} \\
+\frac{x-(\theta+1)}{(\theta+1)^2})^2= \frac{x^2}{(\theta+1)^4}-\frac{2x}{(\theta+1)^3}+\frac{1}{(\theta+1)^2} \\
+E[(\frac{x-(\theta+1)}{(\theta+1)^2})^2]= \frac{E(X^2)}{(\theta+1)^4}-\frac{2E(X)}{(\theta+1)^3}+\frac{1}{(\theta+1)^2}=\frac{1}{(\theta+1)^2} \\
+CRLB=\frac{(\theta+1)^2}{n}= Var(\hat{\theta})\\
+\therefore \hat{\theta} \text{ is UMVUE for } \theta \text{, and it is optimally efficient}
+\end{array}
+$$
