@@ -34,3 +34,41 @@ Freq_s_red <- subset(Freq_s, fre_week >= lower_bound & fre_week <= upper_bound)
 summary(Freq_s_red$fre_week)
 sd(Freq_s_red$fre_week)
 sd(Freq_s_red$fre_week)/sqrt(26)
+###
+# Fit Exponential
+fit_exp_f <- fitdist(Subject$fre_week, "exp")
+summary(fit_exp_f)
+# Fit Poisson
+fit_poisson_f <- fitdist(Subject$fre_week, "pois")
+summary(fit_poisson_f)
+# Fit Negative Binomial
+fit_negbin_f <- fitdist(Subject$fre_week, "nbinom")
+summary(fit_negbin_f)
+# Fit Zero-Inflation Negative Binomial
+zinb_model <- zeroinfl(fre_week_r ~ 1, data = Subject, dist = "negbin")
+summary(zinb_model)
+AIC(zinb_model)
+BIC(zinb_model)
+
+# AD Test for Poisson
+ad.test(Subject$fre_week, ppois, lambda = fit_poisson_f $estimate)
+
+# AD Test for Negative Binomial
+ad.test(Subject$fre_week, pnbinom, size = fit_negbin_f $estimate["size"], 
+        mu = fit_negbin_f$estimate["mu"])
+
+# Zero inflation negative binomial
+size_param <- zinb_model$theta
+mu_values <- predict(zinb_model, type = "response")
+
+ad.test(Subject$fre_week_r, pnbinom, size = size_param, mu = mu_values)
+cvm.test(Subject$fre_week_r, pnbinom, size = size_param, mu = mu_values)
+# CvM Test for Poisson
+cvm.test(Subject$fre_week, ppois, lambda = fit_poisson_f $estimate)
+
+# CvM Test for Negative Binomial
+cvm.test(Subject$fre_week, pnbinom, size = fit_negbin_f $estimate["size"], 
+         mu = fit_negbin_f $estimate["mu"])
+# Anderson-Darling Test for Exponential
+cvm.test(Subject$fre_week, pexp, 
+         rate = fit_exp_f$estimate["rate"])

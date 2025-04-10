@@ -10,11 +10,18 @@ Guelph_road$LANES<-as.factor(Guelph_road$LANES)
 Guelph_road$SPEED<-as.factor(Guelph_road$SPEED)
 Kitchener_road$SPEED<-as.factor(Kitchener_road$SPEED)
 
-Kit <-subset(Kit,ROADCLASS!="Ramp")
 
+##AADT log transformation plot
+ggplot() +
+  geom_density(data = data.frame(Value = Kitchener_road$Aadt), aes(x = Value), fill = "blue", alpha = 0.5) +
+  geom_density(data = data.frame(Value = Kitchener_road$ROADLENGTH), aes(x = Value), fill = "red", alpha = 0.5) +
+  labs(title = "AADT and Road Length", x = "Log Transformed Value", y = "Density") 
+
+##Modeling
 Kit_AADT_1<- lm(log(Aadt)~log(ROADLENGTH)+OPSCLASS+DEAD_END+ROADCLASS+LANES+TRUCKROUTE+STREET_TYPE+FLOW_DIRECTION+SPEED, data=Kitchener_road)
 vif(Kit_AADT_1)
 alias(Kit_AADT_1)
+cor(Kitchener_road[, c("SPEED", "OPSCLASS")])
 
 summary(Kit_AADT_1)
 anova(Kit_AADT_1)

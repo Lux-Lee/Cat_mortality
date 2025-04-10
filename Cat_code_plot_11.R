@@ -1,4 +1,36 @@
 ##PLOT##
+
+##AADT log transformation plot
+ggplot() +
+  geom_density(data = data.frame(Value = Kitchener_road$Aadt, Group="AADT"), 
+               aes(x = Value, fill = Group), alpha = 0.5) +
+  geom_density(data = data.frame(Value = Kitchener_road$ROADLENGTH, Group="Road Length"), 
+               aes(x = Value, fill = Group), alpha = 0.5) +
+  labs(title = " ", x = "Parameter Value", y = "Density", fill=" ") +
+  xlim(0,5000)+ylim(0,0.005)+
+  scale_fill_manual(values = c("AADT" = "blue", "Road Length" = "red")) +
+  theme_bw()+
+  theme(
+    legend.position = c(0.98, 0.98),  # Moves legend inside top-right corner
+    legend.justification = c(1.2, 1.2),   # Aligns legend box to top-right
+    plot.margin = margin(10, 10, 10, 10)  # Keeps enough space around the plot
+  )
+
+ggplot() +
+  geom_density(data = data.frame(Value = log(Kitchener_road$Aadt), Group="AADT"), 
+               aes(x = Value, fill = Group), alpha = 0.5) +
+  geom_density(data = data.frame(Value = log(Kitchener_road$ROADLENGTH), Group="Road Length"), 
+               aes(x = Value, fill = Group), alpha = 0.5) +
+  labs(title = " ", x = "Log Transformed Value", y = "Density", fill=" ") +
+  scale_fill_manual(values = c("AADT" = "blue", "Road Length" = "red")) +
+  theme_bw()+
+  theme(
+    legend.position = c(0.98, 0.98),  # Moves legend inside top-right corner
+    legend.justification = c(1.2, 1.2),   # Aligns legend box to top-right
+    plot.margin = margin(10, 10, 10, 10)  # Keeps enough space around the plot
+  )
+
+##
 plot.legend2 <- c("Weibull", "Gamma", "Log-Normal", "Exponential")
 denscomp(list(fit_weibull_t, fit_gamma_t, fit_lognorm_t, fit_exp_t), 
          fitlwd = 2, legendtext = plot.legend2, xlegend = "topright",

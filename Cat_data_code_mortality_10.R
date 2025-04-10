@@ -14,23 +14,23 @@ FO_seasonal <- FO_sample*26
 TO_sample <- sample(Catcam_filtered$traffic, size=1000, replace=TRUE)
 
 V_1 <-2.17
-V_2 <-7
+V_2 <-6.7
 B <-7.03
 C_1<-B/V_1
 C_2<-B/V_2
 
 Mortality_o_1 <- (1 - exp(-(TO_sample) * C_1)) * 0.7
 Mortality_o_2 <- (1 - exp(-(TO_sample) * C_2)) * 0.7
-Mortality_ow_1 <-(1 - (exp(-(TO_sample) * C_1)^(FO_sample))) * 0.7
-Mortality_ow_2 <-(1 - (exp(-(TO_sample) * C_2)^(FO_sample))) * 0.7
-Mortality_os_1 <-(1 - (exp(-(TO_sample) * C_1)^(FO_seasonal))) * 0.7
-Mortality_os_2 <-(1 - (exp(-(TO_sample) * C_2)^(FO_seasonal))) * 0.7
+Mortality_ow_1 <-(1 - (0.3+0.3*exp(-(TO_sample) * C_1)^(FO_sample))) * 0.7
+Mortality_ow_2 <-(1 - (0.3+0.3*exp(-(TO_sample) * C_2)^(FO_sample))) * 0.7
+Mortality_os_1 <-(1 - (0.3+0.3*exp(-(TO_sample) * C_1)^(FO_seasonal))) * 0.7
+Mortality_os_2 <-(1 - (0.3+0.3*exp(-(TO_sample) * C_2)^(FO_seasonal))) * 0.7
 Mortality_1 <- (1 - exp(-(T_samples) * C_1)) * 0.7
 Mortality_2 <- (1 - exp(-(T_samples) * C_2)) * 0.7
-Mortality_w_1 <-(1 - (exp(-(T_samples) * C_1)^(F_samples))) * 0.7
-Mortality_w_2 <-(1 - (exp(-(T_samples) * C_2)^(F_samples))) * 0.7
-Mortality_s_1 <-(1 - (exp(-(T_samples) * C_1)^(F_seasonal))) * 0.7
-Mortality_s_2 <-(1 - (exp(-(T_samples) * C_2)^(F_seasonal))) * 0.7
+Mortality_w_1 <-(1 - (0.3+0.3*exp(-(T_samples) * C_1)^(F_samples))) * 0.7
+Mortality_w_2 <-(1 - (0.3+0.3*exp(-(T_samples) * C_2)^(F_samples))) * 0.7
+Mortality_s_1 <-(1 - (0.3+0.3*exp(-(T_samples) * C_1)^(F_seasonal))) * 0.7
+Mortality_s_2 <-(1 - (0.3+0.3*exp(-(T_samples) * C_2)^(F_seasonal))) * 0.7
 # Plot densities
 ggplot() +
   geom_density(aes(x = Mortality_o_1), fill = "blue", alpha = 0.5) +
@@ -68,14 +68,14 @@ mortality_datasets <- list(
   "Observed Mortality (v=7)" = Mortality_o_2,
   "Observed Weekly Mortality (v=2.17)" = Mortality_ow_1,
   "Observed Weekly Mortality (v=7)" = Mortality_ow_2,
+  "Observed 6 months Mortality (v=2.17)" = Mortality_os_1,
+  "Observed 6 months Mortality (v=7)" = Mortality_os_2,
   "Mortality (v=2.17)" = Mortality_1,
   "Mortality (v=7)" = Mortality_2,
   "Weekly Mortality (v=2.17)" = Mortality_w_1,
   "Weekly Mortality (v=7)" = Mortality_w_2,
   "6 months Mortality (v=2.17)" = Mortality_s_1,
-  "6 months Mortality (v=7)" = Mortality_s_2,
-  "Observed 6 months Mortality (v=2.17)" = Mortality_os_1,
-  "Observed 6 months Mortality (v=7)" = Mortality_os_2
+  "6 months Mortality (v=7)" = Mortality_s_2
 )
 
 # Function to fit Gamma, Log-Normal, and Beta distributions

@@ -133,3 +133,4 @@ ggplot() +
   labs(title = "Gamma Fit vs. Empirical Data", x = "AADT", y = "Density") +
   geom_vline(aes(xintercept = mean(Catcam_filtered$AADT)), col = "blue") +
   geom_vline(aes(xintercept = mean(simul_gamma_A)), col = "red")
+
